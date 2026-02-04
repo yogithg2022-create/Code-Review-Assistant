@@ -1,0 +1,394 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Code Review Assistant - An instructor-focused tool for code quality and learning improvement"
+    />
+    <meta
+      name="keywords"
+      content="code review, code quality, learning, programming, instructor feedback"
+    />
+    <meta name="author" content="Code Review Assistant" />
+
+    <title>Code Review Assistant | Instructor-Style Code Feedback</title>
+
+    <!-- Preconnect to CDN for faster loading -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="assets/logo.svg" />
+
+    <!-- Stylesheets - loaded in order of dependency -->
+    <link rel="stylesheet" href="styles/base.css" />
+    <link rel="stylesheet" href="styles/layout.css" />
+    <link rel="stylesheet" href="styles/components.css" />
+    <link rel="stylesheet" href="styles/themes.css" />
+    <link rel="stylesheet" href="styles/animations.css" />
+
+    <!-- CodeMirror CSS - Using CDN for fast loading -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css"
+    />
+  </head>
+  <body data-theme="dark">
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="loading-screen">
+      <div class="loading-spinner"></div>
+      <p>Initializing Code Review Assistant...</p>
+    </div>
+
+    <!-- Main Container -->
+    <div class="app-container">
+      <!-- Header -->
+      <header class="app-header">
+        <div class="header-content">
+          <div class="logo-section">
+            <img
+              src="assets/logo.svg"
+              alt="Code Review Assistant Logo"
+              class="logo"
+              onerror="this.style.display = 'none'"
+            />
+            <h1 class="app-title">Code Review Assistant</h1>
+          </div>
+
+          <div class="header-actions">
+            <button
+              id="theme-toggle"
+              class="btn btn-icon"
+              aria-label="Toggle theme"
+            >
+              <span class="icon-theme">🌙</span>
+            </button>
+            <button id="help-btn" class="btn btn-icon" aria-label="Help">
+              <span class="icon-help">❓</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      <!-- Main Content Area -->
+      <main class="main-content">
+        <!-- Left Panel - Code Editor -->
+        <section class="editor-panel panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Your Code</h2>
+            <div class="panel-actions">
+              <select
+                id="language-select"
+                class="language-selector"
+                aria-label="Select programming language"
+              >
+                <option value="javascript" selected>JavaScript</option>
+                <option value="python">Python</option>
+                <option value="java">Java</option>
+                <option value="cpp">C++</option>
+                <option value="csharp">C#</option>
+              </select>
+              <button id="load-example" class="btn btn-secondary btn-sm">
+                <span class="icon">📋</span> Load Example
+              </button>
+              <button id="clear-code" class="btn btn-secondary btn-sm">
+                <span class="icon">🗑️</span> Clear
+              </button>
+            </div>
+          </div>
+
+          <div class="editor-container">
+            <textarea
+              id="code-editor"
+              placeholder="Paste your code here or load an example..."
+            ></textarea>
+          </div>
+
+          <div class="editor-footer">
+            <div class="editor-stats">
+              <span id="line-count" class="stat-item">Lines: 0</span>
+              <span id="char-count" class="stat-item">Characters: 0</span>
+            </div>
+            <button id="analyze-btn" class="btn btn-primary btn-lg">
+              <span class="icon">🔍</span> Analyze Code
+            </button>
+          </div>
+        </section>
+
+        <!-- Right Panel - Analysis Results -->
+        <section class="results-panel panel">
+          <div class="panel-header">
+            <h2 class="panel-title">Analysis Results</h2>
+            <div class="panel-actions">
+              <button id="export-btn" class="btn btn-secondary btn-sm" disabled>
+                <span class="icon">💾</span> Export
+              </button>
+            </div>
+          </div>
+
+          <!-- Welcome State -->
+          <div id="welcome-state" class="empty-state">
+            <div class="empty-state-icon">📝</div>
+            <h3>Ready to Review Your Code</h3>
+            <p>
+              Paste your code in the editor and click "Analyze Code" to get
+              instructor-style feedback on code quality, common mistakes, and
+              improvement suggestions.
+            </p>
+            <ul class="feature-list">
+              <li>✓ Beginner mistake detection</li>
+              <li>✓ Code smell identification</li>
+              <li>✓ Readability scoring</li>
+              <li>✓ Before/after comparison</li>
+              <li>✓ Learning tips & explanations</li>
+            </ul>
+          </div>
+
+          <!-- Analysis In Progress -->
+          <div id="analyzing-state" class="analyzing-state hidden">
+            <div class="analyzing-animation">
+              <div class="pulse-circle"></div>
+            </div>
+            <h3>Analyzing Your Code...</h3>
+            <p class="analyzing-step">Checking for common mistakes</p>
+          </div>
+
+          <!-- Results Content -->
+          <div id="results-content" class="results-content hidden">
+            <!-- Quality Score Card -->
+            <div class="score-card">
+              <div class="score-header">
+                <h3>Code Quality Score</h3>
+              </div>
+              <div class="score-display">
+                <div class="score-circle">
+                  <svg class="score-ring" viewBox="0 0 120 120">
+                    <circle
+                      class="score-ring-background"
+                      cx="60"
+                      cy="60"
+                      r="54"
+                    />
+                    <circle
+                      class="score-ring-progress"
+                      cx="60"
+                      cy="60"
+                      r="54"
+                      id="score-progress-ring"
+                    />
+                  </svg>
+                  <div class="score-value" id="quality-score">0</div>
+                </div>
+                <div class="score-breakdown">
+                  <div class="score-metric">
+                    <span class="metric-label">Readability</span>
+                    <span class="metric-value" id="readability-score">-</span>
+                  </div>
+                  <div class="score-metric">
+                    <span class="metric-label">Structure</span>
+                    <span class="metric-value" id="structure-score">-</span>
+                  </div>
+                  <div class="score-metric">
+                    <span class="metric-label">Naming</span>
+                    <span class="metric-value" id="naming-score">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Issues Tabs -->
+            <div class="issues-section">
+              <div class="tabs">
+                <button class="tab-btn active" data-tab="errors">
+                  <span class="tab-icon">❌</span>
+                  <span class="tab-label">Errors</span>
+                  <span class="tab-badge" id="errors-count">0</span>
+                </button>
+                <button class="tab-btn" data-tab="warnings">
+                  <span class="tab-icon">⚠️</span>
+                  <span class="tab-label">Warnings</span>
+                  <span class="tab-badge" id="warnings-count">0</span>
+                </button>
+                <button class="tab-btn" data-tab="suggestions">
+                  <span class="tab-icon">💡</span>
+                  <span class="tab-label">Suggestions</span>
+                  <span class="tab-badge" id="suggestions-count">0</span>
+                </button>
+                <button class="tab-btn" data-tab="tips">
+                  <span class="tab-icon">📚</span>
+                  <span class="tab-label">Learning Tips</span>
+                </button>
+              </div>
+
+              <!-- Tab Contents -->
+              <div class="tab-content active" id="errors-tab">
+                <div class="issues-list" id="errors-list">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+
+              <div class="tab-content" id="warnings-tab">
+                <div class="issues-list" id="warnings-list">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+
+              <div class="tab-content" id="suggestions-tab">
+                <div class="issues-list" id="suggestions-list">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+
+              <div class="tab-content" id="tips-tab">
+                <div class="tips-container" id="tips-container">
+                  <!-- Populated by JavaScript -->
+                </div>
+              </div>
+            </div>
+
+            <!-- Before/After Comparison Section -->
+            <div class="comparison-section">
+              <div class="section-header">
+                <h3>Code Improvement</h3>
+                <button id="toggle-comparison" class="btn btn-secondary btn-sm">
+                  <span class="icon">🔄</span> Show Comparison
+                </button>
+              </div>
+              <div
+                id="comparison-container"
+                class="comparison-container hidden"
+              >
+                <div class="comparison-view">
+                  <div class="comparison-panel">
+                    <h4>Before</h4>
+                    <pre id="before-code" class="code-block"><code></code></pre>
+                  </div>
+                  <div class="comparison-panel">
+                    <h4>After (Suggested)</h4>
+                    <pre id="after-code" class="code-block"><code></code></pre>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Footer -->
+      <footer class="app-footer">
+        <p>
+          &copy; 2024 Code Review Assistant | Built for learning and improving
+          code quality
+        </p>
+      </footer>
+    </div>
+
+    <!-- Help Modal -->
+    <div id="help-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>How to Use Code Review Assistant</h2>
+          <button class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="help-section">
+            <h3>Getting Started</h3>
+            <ol>
+              <li>Paste your code into the editor or load an example</li>
+              <li>Select your programming language</li>
+              <li>Click "Analyze Code" to get feedback</li>
+            </ol>
+          </div>
+          <div class="help-section">
+            <h3>What We Check</h3>
+            <ul>
+              <li>
+                <strong>Beginner Mistakes:</strong> var usage, long functions,
+                poor naming
+              </li>
+              <li>
+                <strong>Code Smells:</strong> Hardcoding, repeated logic, deep
+                nesting
+              </li>
+              <li>
+                <strong>Readability:</strong> Code structure, formatting,
+                clarity
+              </li>
+              <li>
+                <strong>Best Practices:</strong> Modern patterns and conventions
+              </li>
+            </ul>
+          </div>
+          <div class="help-section">
+            <h3>Understanding Your Score</h3>
+            <p><strong>90-100:</strong> Excellent code quality</p>
+            <p><strong>70-89:</strong> Good, with room for improvement</p>
+            <p><strong>50-69:</strong> Needs attention</p>
+            <p><strong>Below 50:</strong> Significant issues to address</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div id="export-modal" class="modal hidden">
+      <div class="modal-overlay"></div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Export Results</h2>
+          <button class="modal-close" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+          <p>Choose export format:</p>
+          <div class="export-options">
+            <button id="export-txt" class="btn btn-secondary btn-block">
+              <span class="icon">📄</span> Export as TXT
+            </button>
+            <button id="export-json" class="btn btn-secondary btn-block">
+              <span class="icon">📋</span> Export as JSON
+            </button>
+            <button id="export-pdf" class="btn btn-secondary btn-block">
+              <span class="icon">📕</span> Export as PDF
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CodeMirror JavaScript -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/clike/clike.min.js"></script>
+
+    <!-- GSAP for animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <!-- jsPDF for PDF export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Application Scripts - Load order matters -->
+    <script src="scripts/editor.js" defer></script>
+    <script src="scripts/analyze.js" defer></script>
+    <script src="scripts/beginner-checks.js" defer></script>
+    <script src="scripts/smell-detector.js" defer></script>
+    <script src="scripts/score.js" defer></script>
+    <script src="scripts/formatter.js" defer></script>
+    <script src="scripts/compare.js" defer></script>
+    <script src="scripts/tips.js" defer></script>
+    <script src="scripts/export.js" defer></script>
+    <script src="scripts/animations.js" defer></script>
+    <script src="scripts/app.js" defer></script>
+  </body>
+</html>

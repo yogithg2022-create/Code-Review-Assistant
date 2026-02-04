@@ -1,0 +1,81 @@
+/* =========================================================
+   base.css
+   Global resets, variables, typography
+   Compatible with index.html
+========================================================= */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Theme Variables (Light defaults, overridden in themes.css) */
+:root {
+    --bg-primary: #f9fafb;
+    --bg-secondary: #ffffff;
+    --bg-panel: #ffffff;
+    --bg-header: #ffffff;
+    --bg-footer: #f3f4f6;
+
+    --text-primary: #111827;
+    --text-secondary: #4b5563;
+    --text-muted: #6b7280;
+
+    --accent: #4f46e5;
+    --accent-hover: #6366f1;
+
+    --danger: #ef4444;
+    --warning: #f59e0b;
+    --success: #10b981;
+
+    --rounded: 10px;
+    --rounded-lg: 18px;
+
+    --shadow-md: 0 3px 10px rgba(0,0,0,0.08);
+    --shadow-lg: 0 6px 20px rgba(0,0,0,0.12);
+
+    --transition-fast: 0.15s ease;
+    --transition-medium: 0.25s ease;
+
+    --font-main: "Inter", "Poppins", sans-serif;
+
+    --panel-padding: 18px;
+}
+
+/* Body */
+body {
+    background: var(--bg-primary);
+    font-family: var(--font-main);
+    color: var(--text-primary);
+    line-height: 1.6;
+    overflow-x: hidden;
+}
+
+/* Utility classes */
+.hidden {
+    display: none !important;
+}
+
+.app-container {
+    max-width: 1440px;
+    margin: auto;
+    padding: 20px;
+}
+
+/* Logo */
+.logo {
+    width: 42px;
+    height: 42px;
+}
+
+/* Text smoothing */
+h1, h2, h3, h4 {
+    letter-spacing: -0.5px;
+}

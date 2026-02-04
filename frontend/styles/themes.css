@@ -1,0 +1,30 @@
+/* =========================================================
+   themes.css
+   Light & Dark Theme Support
+========================================================= */
+
+/* LIGHT THEME (default via :root in base.css) */
+
+/* DARK THEME */
+body[data-theme="dark"] {
+    --bg-primary: #0f1117;
+    --bg-secondary: #161b22;
+    --bg-panel: #1d232b;
+    --bg-header: #161b22;
+    --bg-footer: #161b22;
+
+    --text-primary: #e5e7eb;
+    --text-secondary: #9ca3af;
+    --text-muted: #6b7280;
+
+    --accent: #4f9cff;
+    --accent-hover: #76b7ff;
+
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.35);
+    --shadow-lg: 0 8px 20px rgba(0,0,0,0.45);
+}
+
+/* Smooth transition when toggling themes */
+body {
+    transition: background 0.25s ease, color 0.25s ease;
+}
