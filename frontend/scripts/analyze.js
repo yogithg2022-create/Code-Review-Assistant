@@ -7,7 +7,7 @@
 importScriptsSafe();
 
 /* ---------- Main Analyze Handler ---------- */
-document.getElementById("analyze-btn")?.addEventListener("click", () => {
+document.getElementById("analyze-btn")?.addEventListener("click", async () => {
     if (!codeEditor) return;
 
     const code = codeEditor.getValue().trim();
@@ -15,30 +15,57 @@ document.getElementById("analyze-btn")?.addEventListener("click", () => {
 
     switchToAnalyzingState();
 
-    setTimeout(() => {
-        const analysisResults = runFullAnalysis(code);
+    setTimeout(async () => {
+        const analysisResults = await runFullAnalysis(code);
         displayResults(analysisResults);
     }, 300); // mimic realistic scan time
 });
-
-/* ---------- Analysis Pipeline ---------- */
-function runFullAnalysis(code) {
+/* ---------- Analysis Pipeline (Backend Powered) ---------- */
+async function runFullAnalysis(code) {
     try {
-        const beginnerIssues = detectBeginnerMistakes(code);  // from beginner-checks.js
-        const smellIssues = detectCodeSmells(code);            // from smell-detector.js
-        const merged = [...beginnerIssues, ...smellIssues];
+        const response = await fetch("https://code-review-assistant-backend-2ef6.onrender.com/api/analyze", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code })
+        });
+
+        if (!response.ok) {
+            console.error("Backend error:", response.status);
+            return fallbackLocalAnalysis(code);
+        }
+
+        const data = await response.json();
 
         return {
-            issues: merged,
-            score: calculateScore(merged, code),               // from score.js
-            before: code,
-            after: formatImprovedVersion(code),                // from formatter.js
-            tips: generateLearningTips(merged)                 // from tips.js
+            issues: data.analysis.issues,
+            score: {
+                total: data.analysis.totalScore,
+                breakdown: data.analysis.breakdown
+            },
+            before: data.analysis.before,
+            after: data.analysis.after,
+            tips: generateLearningTips(data.analysis.issues)
         };
+
     } catch (err) {
-        console.error("❌ Analysis failed:", err);
-        return { issues: [], score: 100, before: code, after: code, tips: [] };
+        console.error("❌ Backend unreachable. Running local analysis.", err);
+        return fallbackLocalAnalysis(code);
     }
+}
+
+/* ---------- Fallback Local Analysis ---------- */
+function fallbackLocalAnalysis(code) {
+    const beginner = detectBeginnerMistakes(code);
+    const smells = detectCodeSmells(code);
+    const merged = [...beginner, ...smells];
+
+    return {
+        issues: merged,
+        score: calculateScore(merged, code),
+        before: code,
+        after: formatImprovedVersion(code),
+        tips: generateLearningTips(merged)
+    };
 }
 
 /* ---------- UI State Switching ---------- */
